@@ -11,3 +11,4 @@ Route::get('/about', '\App\Http\Controllers\PageController@getAboutPage');
 
 Route::get('/product/create', '\App\Http\Controllers\ProductController@createProduct');
 Route::get('/product/all', '\App\Http\Controllers\ProductController@viewAllProduct');
+Route::post('/product/add', '\App\Http\Controllers\ProductController@addNewproduct');
