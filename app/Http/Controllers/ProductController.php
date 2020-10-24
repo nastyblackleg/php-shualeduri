@@ -8,33 +8,70 @@ use App\Models\Product;
 class ProductController extends Controller
 {
 
-  public function createProduct()
+  public function viewAllProduct()
   {
-    $product = new Product();
-    $product->name = 'New Product Name - ' . uniqid();
-    $product->price = rand(100, 1000);
-    $product->category = 'Computers';
+    $products = Product::orderBy('created_at', 'DESC');
+    $products = $this->filter($products);
+    $products = $products->get();
+
+    return view('all-product')->with('products', $products);
+  }
+
+  private function filter($products)
+  {
+    return $products
+      ->when(request('id'), function ($q) {
+        $q->where('id', request('id'));
+      })
+      ->when(request('name'),  function ($q) {
+        $q->where('name', 'LIKE', '%' . request('name') . '%');
+      })
+      ->when(request('min_price'),  function ($q) {
+        $q->where('price', '>=', request('min_price'));
+      })
+      ->when(request('max_price'),  function ($q) {
+        $q->where('price', '<=', request('max_price'));
+      })
+      ->when(request('category'),  function ($q) {
+        $q->where('category', request('category'));
+      });
+  }
+
+  public function editProduct(Request $request, $id)
+  {
+    $product = Product::where('id', $id)->first();
+
+    return view('edit-product')->with('product', $product);
+  }
+
+  public function updateProduct(Request $request, $id)
+  {
+    $product = Product::where('id', $id)->first();
+
+    $product->name = $request->name;
+    $product->price = $request->price;
+    $product->category = $request->category;
 
     $product->save();
 
-    return $product;
+    return redirect()->route('products.all');
   }
 
   public function addNewproduct(Request $request)
   {
-    $product = new Product();
-    $product->name = $request->name;
-    $product->price = $request->price;
-    $product->category = $request->category;
-    $product->save();
+    Product::create([
+      'name' => $request->name,
+      'price' => $request->price,
+      'category' => $request->category,
+    ]);
 
-    return redirect('/product/all');
+    return redirect()->route('products.all');
   }
 
-  public function viewAllProduct()
+  public function deleteProduct(Request $request)
   {
-    $products = Product::orderBy('created_at', 'DESC')->get();
+    Product::where('id', $request->product_id)->delete();
 
-    return view('all-product')->with('products', $products);
+    return redirect()->route('products.all');
   }
 }
